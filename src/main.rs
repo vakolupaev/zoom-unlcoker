@@ -25,35 +25,50 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     init(&mut port);
     thread::sleep(Duration::from_secs(1));
     pelco_d_disable_af(&mut port);
+    pelco_d_disable_af(&mut port);
+    pelco_d_disable_af(&mut port);
+    pelco_d_disable_af(&mut port);
+    pelco_d_disable_af(&mut port);
     thread::sleep(Duration::from_secs(1));
 
     port.configure(&visca_settings).unwrap();
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_secs(5));
+    visca_disable_af(&mut port);
+    visca_disable_af(&mut port);
+    visca_disable_af(&mut port);
+    visca_disable_af(&mut port);
     visca_disable_af(&mut port);
     thread::sleep(Duration::from_secs(1));
 
     let mut data: Vec<u8>;
-    let mut s = String::new();
+    let mut s1 = String::new();
+    let mut s2 = String::new();
 
     loop {
-        stdin().read_line(&mut s).expect("Did not enter a correct string");
-        match s.as_str().trim() {
-            "=" => {
-                data = vec![0x81, 0x01, 0x04, 0x48, 0x04, 0x00, 0x00, 0x00, 0xFF];
-                send(&mut port, &data).unwrap();
-                println!("+");
-                ()
-            }
-            "-" => {
-                data = vec![0x81, 0x01, 0x04, 0x48, 0x00, 0x00, 0x00, 0x00, 0xFF];
-                send(&mut port, &data).unwrap();
-                println!("-");
-                ()
-            }
-            _ => ()
-        }
+        println!("enter zoom value (hex)");
+        stdin().read_line(&mut s1).expect("Did not enter a correct string");
+        let zoom_value: u32 = u32::from_str_radix(s1.trim(), 16).unwrap_or(0);
+        let zoom_bytes = zoom_value.to_le_bytes();
+
+        println!("enter focus value (hex)");
+        stdin().read_line(&mut s2).expect("Did not enter a correct string");
+        let focus_value: u32 = u32::from_str_radix(s2.trim(), 16).unwrap_or(0);
+        let focus_bytes = focus_value.to_le_bytes();
+
+        data = vec![0x81, 0x01, 0x04, 0x47, zoom_bytes[3], zoom_bytes[2], zoom_bytes[1], zoom_bytes[0], 0xFF];
+        println!("{:X?}", data);
+        send(&mut port, &data).unwrap();
+        send(&mut port, &data).unwrap();
+        send(&mut port, &data).unwrap();
+        thread::sleep(Duration::from_millis(100));
+        data = vec![0x81, 0x01, 0x04, 0x48, focus_bytes[3], focus_bytes[2], focus_bytes[1], focus_bytes[0], 0xFF];
+        println!("{:X?}", data);
+        send(&mut port, &data).unwrap();
+        send(&mut port, &data).unwrap();
+        send(&mut port, &data).unwrap();
         
-        s.clear();
+        s1.clear();
+        s2.clear();
     }
 }
 
@@ -91,15 +106,29 @@ fn init(port: &mut serial::unix::TTYPort) {
 
     data = vec![0x51, 0x01, 0x04, 0x78, 0x01, 0x0D, 0x05, 0x61, 0x01, 0x1E, 0x03, 0x00, 0x03, 0x00, 0x00, 0x67];
     send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
 }
 
 fn pelco_d_disable_af(port: &mut serial::unix::TTYPort) {
     let data: Vec<u8>;
     data = vec![0xFF, 0x01, 0x00, 0x2B, 0x00, 0x01, 0x2D];
     send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
 }
 
 fn visca_disable_af(port: &mut serial::unix::TTYPort) {
     let data: Vec<u8> = vec![0x81, 0x01, 0x04, 0x38, 0x03, 0xFF];
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
+    send(port, &data).unwrap();
     send(port, &data).unwrap();
 }
